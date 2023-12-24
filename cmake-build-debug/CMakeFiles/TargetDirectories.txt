@@ -1,0 +1,3 @@
+/Users/jenniferpeled/CLionProjects/JPSemProject/cmake-build-debug/CMakeFiles/JPSemProject.dir
+/Users/jenniferpeled/CLionProjects/JPSemProject/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/jenniferpeled/CLionProjects/JPSemProject/cmake-build-debug/CMakeFiles/rebuild_cache.dir
