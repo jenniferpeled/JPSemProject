@@ -8,10 +8,87 @@ int my_utf8_encode(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_strlen(char *string);
 char *my_utf8_charat(char *string, int index);
+int decoding_tests(char *input, char *expected);
+int encoding_tests(char *input, char *expected);
+int valid_utf8_tests(char *input);
+unsigned int unicode_to_codepoint(const char *input);
 
 int main() {
-    int res = my_utf8_strlen("אריה");
-    printf("%d",res);
+    //printf("\nEncoding Tests:\n");
+    //encoding_tests("05D0", "\xd7\x90");
+    //encoding_tests("0024", "\x24");
+    //encoding_tests("00A8", "\xc2\xa8");
+
+    // if i pass in the emoji itself though, it fails!! so what do i do
+    //encoding_tests("1F618", "\xF0\x9F\x98\x98");
+
+    //printf("\nDecoding Tests:\n");
+    //decoding_tests("\xd7\x90", "05D0");
+    //decoding_tests("\x24", "0024");
+    //decoding_tests("\xc2\xa8", "00A8");
+    //decoding_tests("\xF0\x9F\x98\x98", "1F618");
+
+    //printf("\nValid UTF8 Tests:\n");
+    //valid_utf8_tests("א");
+    //valid_utf8_tests("אריה");
+    //valid_utf8_tests("Jennie");
+    //valid_utf8_tests("\\uD83D\\uDE18");
+
+    char *utf8_string = "Hello, 😘 world!";
+
+    // Get the character at index 7
+    char *character_at_7 = my_utf8_charat(utf8_string, 7);
+
+    if (character_at_7 != NULL) {
+        // Determine the length of the character
+        int char_length = 1;
+        while ((character_at_7[char_length] & 0xC0) == 0x80) {
+            char_length++;
+        }
+
+        // Print the character up to its length
+        printf("Character at index 7: %.*s\n", char_length, character_at_7);
+    } else {
+        printf("Index out of range or invalid string.\n");
+    }
+
+
+    return 0;
+
+}
+
+int encoding_tests(char *input, char *expected){
+    char utf8[10];
+    int bytes = my_utf8_encode(input, utf8);
+
+    if (memcmp(utf8, expected, bytes) == 0) {
+        printf("Test passed!\n");
+    } else {
+        printf("Test failed: Actual UTF-8 does not match expected.\n");
+    }
+
+}
+
+int decoding_tests(char *input, char *expected){
+    char unicode[10];
+    my_utf8_decode(input, unicode);
+    if (strcmp(unicode, expected) == 0) {
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed: Actual Unicode does not match expected.\n");
+    }
+    return 0;
+}
+
+int valid_utf8_tests(char *input){
+    int result = my_utf8_check(input);
+    if (result == 0){
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed: String is not valid UTF8.\n");
+    }
 }
 
 
@@ -76,7 +153,6 @@ int my_utf8_decode(char *input, char *output) {
      *
      */
     size_t i = 0;
-    size_t j = 0;
 
     while (input[i] != '\0') {
         unsigned char currentByte = (unsigned char) input[i++];
@@ -182,6 +258,20 @@ int my_utf8_strlen(char *string){
     return len;
 }
 char *my_utf8_charat(char *string, int index){
-    // assume the str is a list of UTF8 chars in their binary encoding for now
+    /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
+     * each leading bit counts as a character that we have now seen, so we find the right index based off the number of leading bits we are seeing
+     */
+    int i = 0;
+
+    while (index > 0) {
+        // if it's a leading byte, decrement the index so we know to move along
+        if ((string[i] <= 0x7F) || ((string[i] & 0xE0) == 0xC0) || ((string[i] & 0xF0) == 0xE0) || ((string[i] & 0xF8) == 0xF0)){
+            index--;
+        }
+        i++;
+    }
+    // once we fall out of the loop, index = 0 which means we found the right place
+    // so return pointer to that element
+    return &string[i];
 
 }

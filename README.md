@@ -19,3 +19,8 @@ At the end, we put a null terminating character.
 int my_utf8_check(char *string) = a method to check whether a string is valid UTF8
 To see if it is a valid string, I check how the byte begins. Depending on how many bytes it seems to need, I make sure that all the continuation bytes begin with 10xxxxxx. If at any point that is not true, the string is not valid UTF8.
 I found this fairly simple, by using masks for the leading bits respective to the number of 1s needing, and using x80 mask for all continuation bits. 
+
+char *my_utf8_charat(char *string, int index) = a method to return the UTF8 char at that index
+As I know from my earlier methods, we can check whether a byte is a start byte. If it is, we know it is the start of a character which may or may not be what we are looking for.
+To figure that out, I decrement the index each time we see a start byte, so that by the time the index is 0, I am at the right spot for the character the index specified.
+At that point, all I need to do is return the character at that index. 
