@@ -23,4 +23,4 @@ I found this fairly simple, by using masks for the leading bits respective to th
 char *my_utf8_charat(char *string, int index) = a method to return the UTF8 char at that index
 As I know from my earlier methods, we can check whether a byte is a start byte. If it is, we know it is the start of a character which may or may not be what we are looking for.
 To figure that out, I decrement the index each time we see a start byte, so that by the time the index is 0, I am at the right spot for the character the index specified.
-At that point, all I need to do is return the character at that index. 
+At that point, we just need to return the character at that index. However, I realized through testing that we need to add a null terminating character, otherwise the rest of the string will be returned as well, so I reallocated space for the character with a null terminating space at the end.

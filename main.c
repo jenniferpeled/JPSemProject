@@ -40,14 +40,8 @@ int main() {
     char *character_at_7 = my_utf8_charat(utf8_string, 7);
 
     if (character_at_7 != NULL) {
-        // Determine the length of the character
-        int char_length = 1;
-        while ((character_at_7[char_length] & 0xC0) == 0x80) {
-            char_length++;
-        }
-
         // Print the character up to its length
-        printf("Character at index 7: %.*s\n", char_length, character_at_7);
+        printf("Character at index 7: %s\n", character_at_7);
     } else {
         printf("Index out of range or invalid string.\n");
     }
@@ -261,17 +255,30 @@ char *my_utf8_charat(char *string, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
      * each leading bit counts as a character that we have now seen, so we find the right index based off the number of leading bits we are seeing
      */
-    int i = 0;
-
+    int curr = 0;
     while (index > 0) {
         // if it's a leading byte, decrement the index so we know to move along
-        if ((string[i] <= 0x7F) || ((string[i] & 0xE0) == 0xC0) || ((string[i] & 0xF0) == 0xE0) || ((string[i] & 0xF8) == 0xF0)){
+        if ((string[curr] <= 0x7F) || ((string[curr] & 0xE0) == 0xC0) || ((string[curr] & 0xF0) == 0xE0) || ((string[curr] & 0xF8) == 0xF0)){
             index--;
         }
+        curr++;
+    }
+    // once we fall out of the loop, index = 0 which means we found the right place so return that element
+    // however, we need to add a null terminating string or it will return the rest of the string from that element on
+    // so see how long the character is based on continuation bits (10xxxxxx)
+    int i = 1;
+    while ((string[curr+i] & 0xC0) == 0x80) {
         i++;
     }
-    // once we fall out of the loop, index = 0 which means we found the right place
-    // so return pointer to that element
-    return &string[i];
+
+    // need to remake the char* with extra space for null terminating character
+    char *character = (char *)malloc(i + 1);
+    // and then fill in with the character
+    for (int j = 0; j < i; j++) {
+        character[j] = string[curr + j];
+    }
+    character[i] = '\0';
+
+    return character;
 
 }
