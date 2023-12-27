@@ -48,9 +48,10 @@ int main() {
     //charat_tests("Hello, 😘 world!", 7, "😘");
 
     //printf("\nString Length Tests:\n");
-    //strlen_tests("אריה", 8);
-    //strlen_tests("arieh", 5);
-
+    strlen_tests("אריה", 4);
+    strlen_tests("arieh", 5);
+    strlen_tests("😘", 1);
+    printf("%d", strlen("😘"));
     //printf("\nString Comparison Tests:\n");
     //strcmp_tests("hello", "hello");
     //strcmp_tests("abc", "abcdef");
@@ -313,20 +314,23 @@ int my_utf8_strlen(char *input){
     size_t length = 0;
 
     while (*input != '\0') {
-        // determine number of bytes in that character
+        // determine number of bytes in that character and increment length for a leading byte
         int bytes;
         if ((*input & 0x80) == 0) {
             bytes = 1;
+            length++;
         } else if ((*input & 0xE0) == 0xC0) {
             bytes = 2;
+            length++;
         } else if ((*input & 0xF0) == 0xE0) {
             bytes = 3;
+            length++;
         } else if ((*input & 0xF8) == 0xF0) {
             bytes = 4;
+            length++;
         }
 
-        // then jump ahead that amount and increment the length by that many bytes
-        length += bytes;
+        // then jump ahead that amount
         input += bytes;
         // and jump ahead for continuation bits
         while ((*input & 0xC0) == 0x80) {
