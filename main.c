@@ -7,9 +7,10 @@ int my_utf8_check(char *input);
 int my_utf8_encode(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_strlen(char *input);
-char *my_utf8_charat(char *input, int index);
+char* my_utf8_charat(char *input, int index);
 int my_utf8_strcmp(char *str1, char *str2);
-char* my_utf8_strdup(char *input);
+char* my_utf8_concat(char *str1, char *str2);
+char* my_utf8_last(char *input);
 
 int decoding_tests(char *input, char *expected);
 int encoding_tests(char *input, char *expected);
@@ -17,7 +18,8 @@ int valid_utf8_tests(char *input);
 int charat_tests(char *input, int index, char *expected);
 int strlen_tests(char *input, int expected);
 int strcmp_tests(char *str1, char *str2);
-
+int strconcat_tests(char *str1, char *str2, char *expected);
+int lastchar_tests(char *input, char *expected);
 
 
 int main() {
@@ -49,8 +51,35 @@ int main() {
     //strcmp_tests("hello", "hello");
     //strcmp_tests("abc", "abcdef");
 
+    //printf("\nString Concatenation Tests:\n");
+    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+
+    //printf("\nLast Character Tests:\n")
+    //lastchar_tests("Hello, 世界", "界");
+
     return 0;
 
+}
+
+int lastchar_tests(char *input, char *expected){
+    char* result = my_utf8_last(input);
+    if (memcmp(result, expected, strlen(result)) == 0) {
+        printf("Test passed!\n");
+    } else {
+        printf("Test failed.");
+    }
+    return 0;
+}
+
+int strconcat_tests(char *str1, char *str2, char *expected){
+    char* result = my_utf8_concat(str1, str2);
+    if (strcmp(result, expected) == 0) {
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed.");
+    }
+    return 0;
 }
 
 int strcmp_tests(char *str1, char *str2){
@@ -372,4 +401,36 @@ int my_utf8_strcmp(char *str1, char *str2) {
 
     // if we go to this point, then the strings are equal
     return 0;
+}
+
+char* my_utf8_concat(char *str1, char *str2){
+    size_t len1 = strlen(str1);
+    size_t len2 = strlen(str2);
+
+    // allocate space in new string of the combined lengths plus null terminating str
+    char* result = (char*)malloc((len1 + len2 + 1) * sizeof(char));
+
+    strcpy(result, str1);
+    strcpy(result + len1, str2);
+
+    return result;
+}
+
+char* my_utf8_last(char *input) {
+    size_t length = strlen(input);
+
+    // we start at the end and then back up until we see the start of the continuation bits of this last byte
+    char* beg_of_end = input + length - 1;
+    while ((*beg_of_end & 0xC0) == 0x80) {
+        beg_of_end--;
+    }
+
+    // find size of last char and allocate memory for it
+    size_t len_last = input + length - beg_of_end;
+    char* last_char = (char*)malloc((len_last + 1) * sizeof(char));
+
+    memcpy(last_char, beg_of_end, len_last);
+    last_char[len_last] = '\0';
+    return last_char;
+
 }
