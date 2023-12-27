@@ -3,20 +3,20 @@
 #include <string.h>
 #include <stdlib.h>
 
-int my_utf8_check(char *input);
 int my_utf8_encode(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
+int my_utf8_check(char *input);
 int my_utf8_strlen(char *input);
 char* my_utf8_charat(char *input, int index);
 int my_utf8_strcmp(char *str1, char *str2);
 char* my_utf8_concat(char *str1, char *str2);
 char* my_utf8_last(char *input);
 
-int decoding_tests(char *input, char *expected);
 int encoding_tests(char *input, char *expected);
-int valid_utf8_tests(char *input);
-int charat_tests(char *input, int index, char *expected);
+int decoding_tests(char *input, char *expected);
+int valid_utf8_tests(char *input, int expected);
 int strlen_tests(char *input, int expected);
+int charat_tests(char *input, int index, char *expected);
 int strcmp_tests(char *str1, char *str2);
 int strconcat_tests(char *str1, char *str2, char *expected);
 int lastchar_tests(char *input, char *expected);
@@ -38,14 +38,18 @@ int main() {
     //decoding_tests("\xF0\x9F\x98\x98", "1F618");
 
     //printf("\nValid UTF8 Tests:\n");
-    //valid_utf8_tests("א");
-    //valid_utf8_tests("אריה");
-    //valid_utf8_tests("Jennie");
-    //valid_utf8_tests("\\uD83D\\uDE18");
+    //valid_utf8_tests("א", 0);
+    //valid_utf8_tests("אריה", 0);
+    //valid_utf8_tests("Jennie", 0);
+    //valid_utf8_tests("\\uD83D\\uDE18", 0);
 
     //printf("\nChar At Tests:\n");
     //charat_tests("My name is Jennie", 0, "M");
     //charat_tests("Hello, 😘 world!", 7, "😘");
+
+    //printf("\nString Length Tests:\n");
+    //strlen_tests("אריה", 8);
+    //strlen_tests("arieh", 5);
 
     //printf("\nString Comparison Tests:\n");
     //strcmp_tests("hello", "hello");
@@ -94,7 +98,14 @@ int strcmp_tests(char *str1, char *str2){
 }
 
 int strlen_tests(char *input, int expected){
-
+    int result = my_utf8_strlen(input);
+    if (result == expected){
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed.");
+    }
+    return 0;
 }
 
 int charat_tests(char *input, int index, char *expected){
@@ -105,6 +116,28 @@ int charat_tests(char *input, int index, char *expected){
     }
     else {
         printf("Test failed.");
+    }
+    return 0;
+}
+
+int valid_utf8_tests(char *input, int expected){
+    int result = my_utf8_check(input);
+    if (result == expected){
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed.\n");
+    }
+}
+
+int decoding_tests(char *input, char *expected){
+    char unicode[10];
+    my_utf8_decode(input, unicode);
+    if (strcmp(unicode, expected) == 0) {
+        printf("Test passed!\n");
+    }
+    else {
+        printf("Test failed.\n");
     }
     return 0;
 }
@@ -120,28 +153,6 @@ int encoding_tests(char *input, char *expected){
         printf("Test failed.\n");
     }
     return 0;
-}
-
-int decoding_tests(char *input, char *expected){
-    char unicode[10];
-    my_utf8_decode(input, unicode);
-    if (strcmp(unicode, expected) == 0) {
-        printf("Test passed!\n");
-    }
-    else {
-        printf("Test failed.\n");
-    }
-    return 0;
-}
-
-int valid_utf8_tests(char *input){
-    int result = my_utf8_check(input);
-    if (result == 0){
-        printf("Test passed!\n");
-    }
-    else {
-        printf("Test failed.\n");
-    }
 }
 
 
@@ -302,7 +313,7 @@ int my_utf8_strlen(char *input){
     size_t length = 0;
 
     while (*input != '\0') {
-        // Check the number of bytes in the UTF-8 character
+        // determine number of bytes in that character
         int bytes;
         if ((*input & 0x80) == 0) {
             bytes = 1;
@@ -312,13 +323,12 @@ int my_utf8_strlen(char *input){
             bytes = 3;
         } else if ((*input & 0xF8) == 0xF0) {
             bytes = 4;
-        } else {
-            return -1;
         }
 
-        length++;
+        // then jump ahead that amount and increment the length by that many bytes
+        length += bytes;
         input += bytes;
-
+        // and jump ahead for continuation bits
         while ((*input & 0xC0) == 0x80) {
             input++;
         }
