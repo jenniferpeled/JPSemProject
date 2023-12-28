@@ -42,6 +42,9 @@ int main() {
     //valid_utf8_tests("אריה", 0);
     //valid_utf8_tests("Jennie", 0);
     //valid_utf8_tests("\\uD83D\\uDE18", 0);
+    //valid_utf8_tests("\xB2\xA3", -1);
+    //valid_utf8_tests("\xC2\x80", 0);
+
 
     //printf("\nChar At Tests:\n");
     //charat_tests("My name is Jennie", 0, "M");
@@ -56,8 +59,8 @@ int main() {
     //strcmp_tests("hello", "hello");
     //strcmp_tests("abc", "abcdef");
 
-    printf("\nString Concatenation Tests:\n");
-    strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+    //printf("\nString Concatenation Tests:\n");
+    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
 
     //printf("\nLast Character Tests:\n")
     //lastchar_tests("Hello, 世界", "界");
@@ -296,6 +299,7 @@ int my_utf8_check(char *input) {
             unsigned char nextByte = (unsigned char) (*(input + 1));
             unsigned char nextNextByte = (unsigned char) (*(input + 2));
             unsigned char nextNextNextByte = (unsigned char) (*(input + 3));
+
             if (((nextByte & 0xC0) != 0x80) || ((nextNextByte & 0xC0) != 0x80) || ((nextNextNextByte & 0xC0) != 0x80)) {
                 return -1;
             }
