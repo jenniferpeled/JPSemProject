@@ -17,53 +17,64 @@ int decoding_tests(char *input, char *expected);
 int valid_utf8_tests(char *input, int expected);
 int strlen_tests(char *input, int expected);
 int charat_tests(char *input, int index, char *expected);
-int strcmp_tests(char *str1, char *str2);
+int strcmp_tests(char *str1, char *str2, int expected);
 int strconcat_tests(char *str1, char *str2, char *expected);
 int lastchar_tests(char *input, char *expected);
 
 
 int main() {
-    //printf("\nEncoding Tests:\n");
-    //encoding_tests("05D0", "\xd7\x90");
-    //encoding_tests("0024", "\x24");
-    //encoding_tests("00A8", "\xc2\xa8");
+    printf("\nEncoding Tests:\n");
+    encoding_tests("05D0", "\xd7\x90");
+    encoding_tests("0024", "\x24");
+    encoding_tests("00A8", "\xc2\xa8");
+    encoding_tests("1F618", "\xF0\x9F\x98\x98");
 
-    // if i pass in the emoji itself though, it fails!! so what do i do
-    //encoding_tests("1F618", "\xF0\x9F\x98\x98");
+    printf("\nDecoding Tests:\n");
+    decoding_tests("\xd7\x90", "05D0");
+    decoding_tests("\x24", "0024");
+    decoding_tests("\xc2\xa8", "00A8");
+    decoding_tests("\xF0\x9F\x98\x98", "1F618");
 
-    //printf("\nDecoding Tests:\n");
-    //decoding_tests("\xd7\x90", "05D0");
-    //decoding_tests("\x24", "0024");
-    //decoding_tests("\xc2\xa8", "00A8");
-    //decoding_tests("\xF0\x9F\x98\x98", "1F618");
+    printf("\nValid UTF8 Tests:\n");
+    valid_utf8_tests("אריה", 0);
+    valid_utf8_tests("\\uD83D\\uDE18", 0);
+    valid_utf8_tests("\xB2\xA3", -1);
+    valid_utf8_tests("\xC2\x80", 0);
 
-    //printf("\nValid UTF8 Tests:\n");
-    //valid_utf8_tests("א", 0);
-    //valid_utf8_tests("אריה", 0);
-    //valid_utf8_tests("Jennie", 0);
-    //valid_utf8_tests("\\uD83D\\uDE18", 0);
-    //valid_utf8_tests("\xB2\xA3", -1);
-    //valid_utf8_tests("\xC2\x80", 0);
+    printf("\nChar At Tests:\n");
+    charat_tests("My name is Jennie", 0, "M");
+    charat_tests("Hello, 😘 world!", 7, "😘");
 
+    printf("\nString Length Tests:\n");
+    strlen_tests("אריה", 4);
+    strlen_tests("arieh", 5);
+    strlen_tests("😘", 1);
+    strlen_tests("\xC2\x80", 1);
 
-    //printf("\nChar At Tests:\n");
-    //charat_tests("My name is Jennie", 0, "M");
-    //charat_tests("Hello, 😘 world!", 7, "😘");
+    printf("\nString Comparison Tests:\n");
+    strcmp_tests("hello", "hello", 0);
+    strcmp_tests("😘", "😘", 0);
+    strcmp_tests("abc", "abcdef", -1);
 
-    //printf("\nString Length Tests:\n");
-    //strlen_tests("אריה", 4);
-    //strlen_tests("arieh", 5);
-    //strlen_tests("😘", 1);
-
-    //printf("\nString Comparison Tests:\n");
-    //strcmp_tests("hello", "hello");
-    //strcmp_tests("abc", "abcdef");
-
-    //printf("\nString Concatenation Tests:\n");
-    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+    printf("\nString Concatenation Tests:\n");
+    strconcat_tests( "Hello, ", "😘", "Hello, 😘");
     strconcat_tests("€", "€", "€€");
-    //printf("\nLast Character Tests:\n")
-    //lastchar_tests("Hello, 世界", "界");
+
+    printf("\nLast Character Tests:\n");
+    lastchar_tests("Hello, 世界", "界");
+
+    char unicode_char = "÷";
+    char utf8_encoding[] = "\xC3\xB7";
+
+    // Comparing Unicode character with its UTF-8 encoding
+    int result = my_utf8_strcmp(&unicode_char, utf8_encoding);
+
+    if (result == 0) {
+        printf("Characters are equal.\n");
+    } else {
+        printf("Characters are not equal. Result: %d\n", result);
+    }
+
 
     return 0;
 
@@ -91,13 +102,13 @@ int strconcat_tests(char *str1, char *str2, char *expected){
     return 0;
 }
 
-int strcmp_tests(char *str1, char *str2){
+int strcmp_tests(char *str1, char *str2, int expected){
     int result = my_utf8_strcmp(str1, str2);
-    if (result == 0){
+    if (result == expected){
         printf("Test passed!\n");
     }
     else {
-        printf("Test failed.");
+        printf("Test failed.\n");
     }
     return 0;
 }
@@ -108,7 +119,7 @@ int strlen_tests(char *input, int expected){
         printf("Test passed!\n");
     }
     else {
-        printf("Test failed.");
+        printf("Test failed.\n");
     }
     return 0;
 }
@@ -120,7 +131,7 @@ int charat_tests(char *input, int index, char *expected){
         printf("Test passed!\n");
     }
     else {
-        printf("Test failed.");
+        printf("Test failed.\n");
     }
     return 0;
 }
@@ -408,18 +419,21 @@ int my_utf8_strcmp(char *str1, char *str2) {
             }
         }
 
+        if (bytes1 != bytes2){
+            return -1;
+        }
+
         // then go to next byte
         str1 += bytes1;
         str2 += bytes2;
     }
 
-    // if at the while loop they arent both empty then one was longer and they were not equal
-    if (*str1 != *str2){
-        return -1;
+    // if at the end of the while loop theyre both empty, we can return 0
+    if (*str1 == '\0' && *str2 == '\0'){
+        return 0;
     }
-
-    // if we go to this point, then the strings are equal
-    return 0;
+    // otherwise, one was longer so they cant be equal
+    return -1;
 }
 
 char* my_utf8_concat(char *str1, char *str2){
