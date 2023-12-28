@@ -48,16 +48,16 @@ int main() {
     //charat_tests("Hello, 😘 world!", 7, "😘");
 
     //printf("\nString Length Tests:\n");
-    strlen_tests("אריה", 4);
-    strlen_tests("arieh", 5);
-    strlen_tests("😘", 1);
-    printf("%d", strlen("😘"));
+    //strlen_tests("אריה", 4);
+    //strlen_tests("arieh", 5);
+    //strlen_tests("😘", 1);
+
     //printf("\nString Comparison Tests:\n");
     //strcmp_tests("hello", "hello");
     //strcmp_tests("abc", "abcdef");
 
-    //printf("\nString Concatenation Tests:\n");
-    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+    printf("\nString Concatenation Tests:\n");
+    strconcat_tests( "Hello, ", "😘", "Hello, 😘");
 
     //printf("\nLast Character Tests:\n")
     //lastchar_tests("Hello, 世界", "界");
@@ -418,14 +418,30 @@ int my_utf8_strcmp(char *str1, char *str2) {
 }
 
 char* my_utf8_concat(char *str1, char *str2){
-    size_t len1 = strlen(str1);
-    size_t len2 = strlen(str2);
+    size_t len1 = 0;
+    size_t len2 = 0;
+
+    // get lengths for when we allocate memory for new str, cant use strlen
+    while (str1[len1] != '\0'){
+        len1++;
+    }
+    while (str2[len2] != '\0'){
+        len2++;
+    }
 
     // allocate space in new string of the combined lengths plus null terminating str
     char* result = (char*)malloc((len1 + len2 + 1) * sizeof(char));
 
-    strcpy(result, str1);
-    strcpy(result + len1, str2);
+    // then insert all the letters
+    for (size_t i = 0; i < len1; i++){
+        result[i] = str1[i];
+    }
+    for (size_t j = 0; j < len2; j++){
+        result[len1 + j] = str2[j];
+    }
+
+    // then insert null terminating string
+    result[len1+ len2] = '\0';
 
     return result;
 }
