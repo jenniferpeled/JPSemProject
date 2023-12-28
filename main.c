@@ -61,7 +61,7 @@ int main() {
 
     //printf("\nString Concatenation Tests:\n");
     //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
-
+    strconcat_tests("€", "€", "€€");
     //printf("\nLast Character Tests:\n")
     //lastchar_tests("Hello, 世界", "界");
 
@@ -80,13 +80,14 @@ int lastchar_tests(char *input, char *expected){
 }
 
 int strconcat_tests(char *str1, char *str2, char *expected){
-    char* result = my_utf8_concat(str1, str2);
+    char *result = my_utf8_concat(str1, str2);
+
     if (strcmp(result, expected) == 0) {
         printf("Test passed!\n");
+    } else {
+        printf("Test failed.\n");
     }
-    else {
-        printf("Test failed.");
-    }
+
     return 0;
 }
 
