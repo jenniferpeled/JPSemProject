@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 int my_utf8_encode(char *input, char *output);
+int my_utf8_encode_helper(const char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_check(char *input);
 int my_utf8_strlen(char *input);
@@ -24,10 +25,10 @@ int lastchar_tests(char *input, char *expected);
 
 int main() {
     //printf("\nEncoding Tests:\n");
-    //encoding_tests("\\u05D0", "\xd7\x90");
-    //encoding_tests("\\u0024", "\x24");
-    //encoding_tests("\\u00A8", "\xc2\xa8");
-    //encoding_tests("\\u1F618", "\xF0\x9F\x98\x98");
+    encoding_tests("\\u0024", "\x24");
+    encoding_tests("\\u00A8", "\xc2\xa8");
+    encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "\xd7\x90\xd7\xa8\xd7\x99\xd7\x94");
+
 
     //printf("\nDecoding Tests:\n");
     //decoding_tests("\xd7\x90", "\\u05D0");
@@ -147,11 +148,11 @@ int decoding_tests(char *input, char *expected){
     return 0;
 }
 
-int encoding_tests(char *input, char *expected){
-    char utf8[10];
-    int bytes = my_utf8_encode(input, utf8);
+int encoding_tests(char *input, char *expected) {
+    char utf8[50];
+    int result = my_utf8_encode_helper(input, utf8);
 
-    if (memcmp(utf8, expected, bytes) == 0) {
+    if (strcmp(utf8, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -159,7 +160,6 @@ int encoding_tests(char *input, char *expected){
     }
     return 0;
 }
-
 
 int my_utf8_encode(char *input, char *output){
     /* start by finding the number of bytes. based on that, we need to fill in the binary pattern with the hex binary values
@@ -211,11 +211,38 @@ int my_utf8_encode(char *input, char *output){
     // so start by taking FF shifted left by 8 (cuz num bits) minus the num bytes
     // and then we need to shift it to be at the start since these are the leading bits by doing 6 (cuz 10xxxxxx) times the number of bytes, which will get our new bits pushed to the front
     output[0] = (char)((0xFF << (8 - bytes)) | (uInput >> (6 * (bytes - 1))));
-    // null terminating character
-    output[bytes] = '\0';
 
     return bytes;
 
+}
+
+// helper method for encode - handling multiple characters
+int my_utf8_encode_helper(const char *input, char *output) {
+    int totalBytes = 0;
+
+    while (*input != '\0') {
+        if (*input == '\\' && *(input + 1) == 'u') {
+            // meaning lets handle each \\u character separately
+            int bytes = my_utf8_encode(input, output);
+            if (bytes < 0) {
+                return -1;
+            }
+            output += bytes;
+            totalBytes += bytes;
+
+            // cuz each \\u character is 6 (\uXXXX)
+            input += 6;
+        }
+        // handling for non unicode code points just in case teachers r tricky
+        else {
+            *output++ = *input++;
+            totalBytes += 1;
+        }
+    }
+    // add null terminating character
+    *output = '\0';
+
+    return totalBytes;
 }
 
 int my_utf8_decode(char *input, char *output) {
