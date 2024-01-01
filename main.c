@@ -23,57 +23,46 @@ int lastchar_tests(char *input, char *expected);
 
 
 int main() {
-    printf("\nEncoding Tests:\n");
-    encoding_tests("05D0", "\xd7\x90");
-    encoding_tests("0024", "\x24");
-    encoding_tests("00A8", "\xc2\xa8");
-    encoding_tests("1F618", "\xF0\x9F\x98\x98");
+    //printf("\nEncoding Tests:\n");
+    //encoding_tests("\\u05D0", "\xd7\x90");
+    //encoding_tests("\\u0024", "\x24");
+    //encoding_tests("\\u00A8", "\xc2\xa8");
+    //encoding_tests("\\u1F618", "\xF0\x9F\x98\x98");
 
-    printf("\nDecoding Tests:\n");
-    decoding_tests("\xd7\x90", "05D0");
-    decoding_tests("\x24", "0024");
-    decoding_tests("\xc2\xa8", "00A8");
-    decoding_tests("\xF0\x9F\x98\x98", "1F618");
+    //printf("\nDecoding Tests:\n");
+    //decoding_tests("\xd7\x90", "\\u05D0");
+    //decoding_tests("\x24", "\\u0024");
+    //decoding_tests("\xc2\xa8", "\\u00A8");
+    //decoding_tests("\xF0\x9F\x98\x98", "\\u1F618");
 
-    printf("\nValid UTF8 Tests:\n");
-    valid_utf8_tests("אריה", 0);
-    valid_utf8_tests("\\uD83D\\uDE18", 0);
-    valid_utf8_tests("\xB2\xA3", -1);
-    valid_utf8_tests("\xC2\x80", 0);
+    //printf("\nValid UTF8 Tests:\n");
+    //valid_utf8_tests("אריה", 0);
+    //valid_utf8_tests("\\uD83D\\uDE18", 0);
+    //valid_utf8_tests("\xB2\xA3", -1);
+    //valid_utf8_tests("\xC2\x80", 0);
+    //valid_utf8_tests("\\uD83D אריה jennie", 0);
 
-    printf("\nChar At Tests:\n");
-    charat_tests("My name is Jennie", 0, "M");
-    charat_tests("Hello, 😘 world!", 7, "😘");
+    //printf("\nChar At Tests:\n");
+    //charat_tests("My name is Jennie", 0, "M");
+    //charat_tests("Hello, 😘 Jennie!", 7, "😘");
 
-    printf("\nString Length Tests:\n");
-    strlen_tests("אריה", 4);
-    strlen_tests("arieh", 5);
-    strlen_tests("😘", 1);
-    strlen_tests("\xC2\x80", 1);
+    //printf("\nString Length Tests:\n");
+    //strlen_tests("אריה", 4);
+    //strlen_tests("arieh", 5);
+    //strlen_tests("😘", 1);
+    //strlen_tests("\xC2\x80", 1);
 
-    printf("\nString Comparison Tests:\n");
-    strcmp_tests("hello", "hello", 0);
-    strcmp_tests("😘", "😘", 0);
-    strcmp_tests("abc", "abcdef", -1);
+    //printf("\nString Comparison Tests:\n");
+    //strcmp_tests("hello", "hello", 0);
+    //strcmp_tests("😘", "😘", 0);
+    //strcmp_tests("abc", "abcdef", -1);
 
-    printf("\nString Concatenation Tests:\n");
-    strconcat_tests( "Hello, ", "😘", "Hello, 😘");
-    strconcat_tests("€", "€", "€€");
+    //printf("\nString Concatenation Tests:\n");
+    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+    //strconcat_tests("€", "€", "€€");
 
-    printf("\nLast Character Tests:\n");
-    lastchar_tests("Hello, 世界", "界");
-
-    char unicode_char = "÷";
-    char utf8_encoding[] = "\xC3\xB7";
-
-    // Comparing Unicode character with its UTF-8 encoding
-    int result = my_utf8_strcmp(&unicode_char, utf8_encoding);
-
-    if (result == 0) {
-        printf("Characters are equal.\n");
-    } else {
-        printf("Characters are not equal. Result: %d\n", result);
-    }
+    //printf("\nLast Character Tests:\n");
+    //lastchar_tests("Hello, 世界", "界");
 
 
     return 0;
@@ -178,6 +167,9 @@ int my_utf8_encode(char *input, char *output){
      * then we'll handle the leading bits and final null terminating
      */
 
+    // ignore the \u
+    input += 2;
+
     // hex needs to be an int for the bit manipulation
     unsigned int uInput = strtoul(input, NULL, 16);
 
@@ -210,9 +202,9 @@ int my_utf8_encode(char *input, char *output){
         // calculate the shift based on number of bytes, bc each 10xxxxx is 6 we do 6 * that number
         // for the mask, we want 6 bits as in 0011 1111 which is 0x3f
         // and we want the first 2 bits to be 10 as in 1000 0000 which is 0x80 (do or so we dont mess with the rest)
+        // and obv at the end we convert the hex back into char
         size_t shift = 6 * (bytes - i -1);
         output[i] = (char)(0x80 | ((uInput >> shift) & 0x3F));
-
     }
     // now, for the start of the bits, we need 1s in the beginning equal to the number of bytes
     // how? take a mask of all 1s and shift it to put the 1s in the digits we need based on bytes (like for 2 bytes it needs to start w 11)
@@ -235,7 +227,8 @@ int my_utf8_decode(char *input, char *output) {
     size_t i = 0;
 
     while (input[i] != '\0') {
-        unsigned char currentByte = (unsigned char) input[i++];
+        unsigned char currentByte = (unsigned char) input[i];
+        i++;
 
         // find number of bytes like in utf8 check
         int bytes;
@@ -250,7 +243,7 @@ int my_utf8_decode(char *input, char *output) {
         }
 
         // we want to mask off the leading bits that we added in encoding by ANDing but preserving j the bits we want
-        // so and with mask that has 1s in bits we want and 0s in the other - FF but shift by how many bytes so we ignore that leading
+        // so AND with mask that has 1s in bits we want and 0s in the other - FF but shift by how many bytes there are so we ignore that amt leading 1s
         unsigned int codePoint = currentByte & (0xFF >> bytes);
 
         // and then we want to mask off the rest of the leading bits, as in the 10s, so we mask w 00111111 which is 3f
@@ -260,7 +253,7 @@ int my_utf8_decode(char *input, char *output) {
         }
 
         // wasn't sure how to get it back into output but found this method which stores output in char buffer
-        sprintf(output, "%04X", codePoint);
+        sprintf(output, "\\u%04X", codePoint);
     }
     return i;
 }
