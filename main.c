@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 int my_utf8_encode(char *input, char *output);
-int my_utf8_encode_helper(const char *input, char *output);
+int my_utf8_encode_helper(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_check(char *input);
 int my_utf8_strlen(char *input);
@@ -24,52 +24,51 @@ int lastchar_tests(char *input, char *expected);
 
 
 int main() {
-    //printf("\nEncoding Tests:\n");
-    //encoding_tests("\\u0024", "\x24");
-    //encoding_tests("\\u00A8", "\xc2\xa8");
-    //encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "אריה");
-    //encoding_tests("Hello \\u05D0\\u05E8\\u05D9\\u05D4", "Hello אריה");
-    //encoding_tests("\\u1F618", "😘");
+    printf("\nEncoding Tests:\n");
+    encoding_tests("\\u0024", "\x24");
+    encoding_tests("\\u00A8", "\xc2\xa8");
+    encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "אריה");
+    encoding_tests("Hello \\u05D0\\u05E8\\u05D9\\u05D4", "Hello אריה");
+    encoding_tests("\\u1F618", "😘");
 
+    printf("\nDecoding Tests:\n");
+    decoding_tests("\xd7\x90", "\\u05D0");
+    decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "\\u05D0\\u05E8\\u05D9\\u05D4");
+    decoding_tests("\xc2\xa8", "\\u00A8");
+    decoding_tests("\xF0\x9F\x98\x98", "\\u1F618");
+    decoding_tests("Hello \xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "Hello \\u05D0\\u05E8\\u05D9\\u05D4");
+    decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94 Hello", "\\u05D0\\u05E8\\u05D9\\u05D4 Hello");
+    decoding_tests("\x24", "$");
+    decoding_tests("j", "j");
 
-    //printf("\nDecoding Tests:\n");
-    //decoding_tests("\xd7\x90", "\\u05D0");
-    //decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "\\u05D0\\u05E8\\u05D9\\u05D4");
-    //decoding_tests("\xc2\xa8", "\\u00A8");
-    //decoding_tests("\xF0\x9F\x98\x98", "\\u1F618");
-    //decoding_tests("Hello \xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "Hello \\u05D0\\u05E8\\u05D9\\u05D4");
-    //decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94 Hello", "\\u05D0\\u05E8\\u05D9\\u05D4 Hello");
-    //decoding_tests("\x24", "$");
-    //decoding_tests("j", "j");
+    printf("\nValid UTF8 Tests:\n");
+    valid_utf8_tests("אריה", 0);
+    valid_utf8_tests("\\uD83D\\uDE18", 0);
+    valid_utf8_tests("\xB2\xA3", -1);
+    valid_utf8_tests("\xC2\x80", 0);
+    valid_utf8_tests("\\uD83D אריה jennie", 0);
 
-    //printf("\nValid UTF8 Tests:\n");
-    //valid_utf8_tests("אריה", 0);
-    //valid_utf8_tests("\\uD83D\\uDE18", 0);
-    //valid_utf8_tests("\xB2\xA3", -1);
-    //valid_utf8_tests("\xC2\x80", 0);
-    //valid_utf8_tests("\\uD83D אריה jennie", 0);
+    printf("\nChar At Tests:\n");
+    charat_tests("My name is Jennie", 0, "M");
+    charat_tests("Hello, 😘 Jennie!", 7, "😘");
 
-    //printf("\nChar At Tests:\n");
-    //charat_tests("My name is Jennie", 0, "M");
-    //charat_tests("Hello, 😘 Jennie!", 7, "😘");
+    printf("\nString Length Tests:\n");
+    strlen_tests("אריה", 4);
+    strlen_tests("arieh", 5);
+    strlen_tests("😘", 1);
+    strlen_tests("\xC2\x80", 1);
 
-    //printf("\nString Length Tests:\n");
-    //strlen_tests("אריה", 4);
-    //strlen_tests("arieh", 5);
-    //strlen_tests("😘", 1);
-    //strlen_tests("\xC2\x80", 1);
+    printf("\nString Comparison Tests:\n");
+    strcmp_tests("hello", "hello", 0);
+    strcmp_tests("😘", "😘", 0);
+    strcmp_tests("abc", "abcdef", -1);
 
-    //printf("\nString Comparison Tests:\n");
-    //strcmp_tests("hello", "hello", 0);
-    //strcmp_tests("😘", "😘", 0);
-    //strcmp_tests("abc", "abcdef", -1);
+    printf("\nString Concatenation Tests:\n");
+    strconcat_tests( "Hello, ", "😘", "Hello, 😘");
+    strconcat_tests("€", "€", "€€");
 
-    //printf("\nString Concatenation Tests:\n");
-    //strconcat_tests( "Hello, ", "😘", "Hello, 😘");
-    //strconcat_tests("€", "€", "€€");
-
-    //printf("\nLast Character Tests:\n");
-    //lastchar_tests("Hello, 世界", "界");
+    printf("\nLast Character Tests:\n");
+    lastchar_tests("Hello, 世界", "界");
 
 
     return 0;
@@ -78,11 +77,14 @@ int main() {
 
 int lastchar_tests(char *input, char *expected){
     char* result = my_utf8_last(input);
+
     if (memcmp(result, expected, strlen(result)) == 0) {
         printf("Test passed!\n");
-    } else {
+    }
+    else {
         printf("Test failed.");
     }
+
     return 0;
 }
 
@@ -91,7 +93,8 @@ int strconcat_tests(char *str1, char *str2, char *expected){
 
     if (strcmp(result, expected) == 0) {
         printf("Test passed!\n");
-    } else {
+    }
+    else {
         printf("Test failed.\n");
     }
 
@@ -100,23 +103,27 @@ int strconcat_tests(char *str1, char *str2, char *expected){
 
 int strcmp_tests(char *str1, char *str2, int expected){
     int result = my_utf8_strcmp(str1, str2);
+
     if (result == expected){
         printf("Test passed!\n");
     }
     else {
         printf("Test failed.\n");
     }
+
     return 0;
 }
 
 int strlen_tests(char *input, int expected){
     int result = my_utf8_strlen(input);
+
     if (result == expected){
         printf("Test passed!\n");
     }
     else {
         printf("Test failed.\n");
     }
+
     return 0;
 }
 
@@ -129,17 +136,21 @@ int charat_tests(char *input, int index, char *expected){
     else {
         printf("Test failed.\n");
     }
+
     return 0;
 }
 
 int valid_utf8_tests(char *input, int expected){
     int result = my_utf8_check(input);
+
     if (result == expected){
         printf("Test passed!\n");
     }
     else {
         printf("Test failed.\n");
     }
+
+    return 0;
 }
 
 int decoding_tests(char *input, char *expected){
@@ -169,6 +180,7 @@ int encoding_tests(char *input, char *expected) {
     else {
         printf("Test failed.\n");
     }
+
     return 0;
 }
 
@@ -197,13 +209,13 @@ int my_utf8_encode(char *input, char *output){
     else if (uInput <= 0x10FFFF) {
         bytes = 4;
     }
-    else{
+    else {
         return -1;
     }
 
     // one byte we're chilling and just give it back
     if (uInput <= 0x7F) {
-        output[0] = (char)uInput;
+        output[0] = (unsigned char)uInput;
         output[1] = '\0';
         return 1;
     }
@@ -215,20 +227,20 @@ int my_utf8_encode(char *input, char *output){
         // and we want the first 2 bits to be 10 as in 1000 0000 which is 0x80 (do or so we dont mess with the rest)
         // and obv at the end we convert the hex back into char
         size_t shift = 6 * (bytes - i -1);
-        output[i] = (char)(0x80 | ((uInput >> shift) & 0x3F));
+        output[i] = (unsigned char)(0x80 | ((uInput >> shift) & 0x3F));
     }
     // now, for the start of the bits, we need 1s in the beginning equal to the number of bytes
     // how? take a mask of all 1s and shift it to put the 1s in the digits we need based on bytes (like for 2 bytes it needs to start w 11)
     // so start by taking FF shifted left by 8 (cuz num bits) minus the num bytes
     // and then we need to shift it to be at the start since these are the leading bits by doing 6 (cuz 10xxxxxx) times the number of bytes, which will get our new bits pushed to the front
-    output[0] = (char)((0xFF << (8 - bytes)) | (uInput >> (6 * (bytes - 1))));
+    output[0] = (unsigned char)((0xFF << (8 - bytes)) | (uInput >> (6 * (bytes - 1))));
 
     return bytes;
 
 }
 
 // helper method for encode - handling multiple characters
-int my_utf8_encode_helper(const char *input, char *output) {
+int my_utf8_encode_helper(char *input, char *output) {
     while (*input != '\0') {
         if (*input == '\\' && *(input + 1) == 'u') {
             // we're gonna handle each \u character separately
@@ -277,7 +289,7 @@ int my_utf8_decode(char *input, char *output) {
         if ((currentByte & 0x80) == 0) {
             // if it was one byte, we're chilling and just put it back out
             bytes = 1;
-            output[currentOut++] = (char)currentByte;
+            output[currentOut++] = (unsigned char)currentByte;
             continue;
         } else if ((currentByte & 0xE0) == 0xC0) {
             bytes = 2;
@@ -311,7 +323,7 @@ int my_utf8_check(char *input) {
          * then check that the following ones are correct
          * return false if at any point it breaks the pattern
          * */
-        unsigned char currentByte = (unsigned char) (*input);
+        unsigned char currentByte = (unsigned char)(*input);
 
         // single byte (automatically valid) = 0xxxxxxx
         if (currentByte <= 0x7F) {
@@ -334,8 +346,8 @@ int my_utf8_check(char *input) {
             // three bytes = 1110xxxx 10xxxxxx 10xxxxxx
             // start by mapping first 4 bits to 1110
         else if ((currentByte & 0xF0) == 0xE0) {
-            unsigned char nextByte = (unsigned char) (*(input + 1));
-            unsigned char nextNextByte = (unsigned char) (*(input + 2));
+            unsigned char nextByte = (unsigned char)(*(input + 1));
+            unsigned char nextNextByte = (unsigned char)(*(input + 2));
             if (((nextByte & 0xC0) != 0x80) || ((nextNextByte & 0xC0) != 0x80)){
                 return -1;
             }
@@ -347,9 +359,9 @@ int my_utf8_check(char *input) {
             // four bytes = 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
             // start by mapping first 5 bits to 11110
         else if ((currentByte & 0xF8) == 0xF0) {
-            unsigned char nextByte = (unsigned char) (*(input + 1));
-            unsigned char nextNextByte = (unsigned char) (*(input + 2));
-            unsigned char nextNextNextByte = (unsigned char) (*(input + 3));
+            unsigned char nextByte = (unsigned char)(*(input + 1));
+            unsigned char nextNextByte = (unsigned char)(*(input + 2));
+            unsigned char nextNextNextByte = (unsigned char)(*(input + 3));
 
             if (((nextByte & 0xC0) != 0x80) || ((nextNextByte & 0xC0) != 0x80) || ((nextNextNextByte & 0xC0) != 0x80)) {
                 return -1;
@@ -374,13 +386,16 @@ int my_utf8_strlen(char *input){
         if ((*input & 0x80) == 0) {
             bytes = 1;
             length++;
-        } else if ((*input & 0xE0) == 0xC0) {
+        }
+        else if ((*input & 0xE0) == 0xC0) {
             bytes = 2;
             length++;
-        } else if ((*input & 0xF0) == 0xE0) {
+        }
+        else if ((*input & 0xF0) == 0xE0) {
             bytes = 3;
             length++;
-        } else if ((*input & 0xF8) == 0xF0) {
+        }
+        else if ((*input & 0xF8) == 0xF0) {
             bytes = 4;
             length++;
         }
@@ -432,21 +447,28 @@ int my_utf8_strcmp(char *str1, char *str2) {
         int bytes1 = 0;
         if ((*str1 & 0x80) == 0) {
             bytes1 = 1;
-        } else if ((*str1 & 0xE0) == 0xC0) {
+        }
+        else if ((*str1 & 0xE0) == 0xC0) {
             bytes1 = 2;
-        } else if ((*str1 & 0xF0) == 0xE0) {
+        }
+        else if ((*str1 & 0xF0) == 0xE0) {
             bytes1 = 3;
-        } else if ((*str1 & 0xF8) == 0xF0) {
+        }
+        else if ((*str1 & 0xF8) == 0xF0) {
             bytes1 = 4;
         }
+
         int bytes2 = 0;
         if ((*str2 & 0x80) == 0) {
             bytes2 = 1;
-        } else if ((*str2 & 0xE0) == 0xC0) {
+        }
+        else if ((*str2 & 0xE0) == 0xC0) {
             bytes2 = 2;
-        } else if ((*str2 & 0xF0) == 0xE0) {
+        }
+        else if ((*str2 & 0xF0) == 0xE0) {
             bytes2 = 3;
-        } else if ((*str1 & 0xF8) == 0xF0) {
+        }
+        else if ((*str1 & 0xF8) == 0xF0) {
             bytes2 = 4;
         }
 
