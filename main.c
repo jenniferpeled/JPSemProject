@@ -25,16 +25,22 @@ int lastchar_tests(char *input, char *expected);
 
 int main() {
     //printf("\nEncoding Tests:\n");
-    encoding_tests("\\u0024", "\x24");
-    encoding_tests("\\u00A8", "\xc2\xa8");
-    encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "\xd7\x90\xd7\xa8\xd7\x99\xd7\x94");
+    //encoding_tests("\\u0024", "\x24");
+    //encoding_tests("\\u00A8", "\xc2\xa8");
+    //encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "אריה");
+    //encoding_tests("Hello \\u05D0\\u05E8\\u05D9\\u05D4", "Hello אריה");
+    //encoding_tests("\\u1F618", "😘");
 
 
     //printf("\nDecoding Tests:\n");
     //decoding_tests("\xd7\x90", "\\u05D0");
-    //decoding_tests("\x24", "\\u0024");
+    //decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "\\u05D0\\u05E8\\u05D9\\u05D4");
     //decoding_tests("\xc2\xa8", "\\u00A8");
     //decoding_tests("\xF0\x9F\x98\x98", "\\u1F618");
+    //decoding_tests("Hello \xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "Hello \\u05D0\\u05E8\\u05D9\\u05D4");
+    //decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94 Hello", "\\u05D0\\u05E8\\u05D9\\u05D4 Hello");
+    //decoding_tests("\x24", "$");
+    //decoding_tests("j", "j");
 
     //printf("\nValid UTF8 Tests:\n");
     //valid_utf8_tests("אריה", 0);
@@ -137,20 +143,25 @@ int valid_utf8_tests(char *input, int expected){
 }
 
 int decoding_tests(char *input, char *expected){
-    char unicode[10];
+    char unicode[100];
+
+    // realized I had an issue with not null terminating the array (previous tests were seeping in), so this makes sure its null terminating
+    memset(unicode, 0, sizeof(unicode));
     my_utf8_decode(input, unicode);
+
     if (strcmp(unicode, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
         printf("Test failed.\n");
     }
+
     return 0;
 }
 
 int encoding_tests(char *input, char *expected) {
-    char utf8[50];
-    int result = my_utf8_encode_helper(input, utf8);
+    char utf8[100];
+    my_utf8_encode_helper(input, utf8);
 
     if (strcmp(utf8, expected) == 0) {
         printf("Test passed!\n");
@@ -218,49 +229,56 @@ int my_utf8_encode(char *input, char *output){
 
 // helper method for encode - handling multiple characters
 int my_utf8_encode_helper(const char *input, char *output) {
-    int totalBytes = 0;
-
     while (*input != '\0') {
         if (*input == '\\' && *(input + 1) == 'u') {
-            // meaning lets handle each \\u character separately
+            // we're gonna handle each \u character separately
+            // first we're gonna need to know how long this unicode char was for when we move along the input string
+            // so, again ignore the \u, then move along as long as its not the end, not exceeding 5 hex digits like we said, and still a hex digit
+            int sequenceLength = 2;
+            while (*(input + sequenceLength) != '\0' && sequenceLength < 7 &&
+                   (isxdigit(*(input + sequenceLength)))) {
+                sequenceLength++;
+            }
+
+            // now lets handle each character
             int bytes = my_utf8_encode(input, output);
             if (bytes < 0) {
                 return -1;
             }
             output += bytes;
-            totalBytes += bytes;
-
-            // cuz each \\u character is 6 (\uXXXX)
-            input += 6;
+            // and then move to the next character
+            input += sequenceLength;
         }
+
         // handling for non unicode code points just in case teachers r tricky
         else {
             *output++ = *input++;
-            totalBytes += 1;
         }
     }
     // add null terminating character
     *output = '\0';
 
-    return totalBytes;
+    return 0;
 }
 
 int my_utf8_decode(char *input, char *output) {
     /* so now, we want to get it back to how it was BEFORE we got it into utf8 formatting, like w leading bits
-     * so we need to know how many bytes (cuz then we know  how many leading bits need to be lost
-     * then,
-     *
+     * so we need to know how many bytes (cuz then we know how many leading bits need to be lost
+     * then, we need to mask off all the parts that we had previously added
      */
     size_t i = 0;
+    size_t currentOut = 0;
 
     while (input[i] != '\0') {
-        unsigned char currentByte = (unsigned char) input[i];
-        i++;
+        unsigned char currentByte = (unsigned char)input[i++];
 
         // find number of bytes like in utf8 check
         int bytes;
         if ((currentByte & 0x80) == 0) {
+            // if it was one byte, we're chilling and just put it back out
             bytes = 1;
+            output[currentOut++] = (char)currentByte;
+            continue;
         } else if ((currentByte & 0xE0) == 0xC0) {
             bytes = 2;
         } else if ((currentByte & 0xF0) == 0xE0) {
@@ -279,10 +297,11 @@ int my_utf8_decode(char *input, char *output) {
             codePoint = (codePoint << 6) | (input[i++] & 0x3F);
         }
 
-        // wasn't sure how to get it back into output but found this method which stores output in char buffer
-        sprintf(output, "\\u%04X", codePoint);
+        // wasn't sure how to get it back into output but found this method which stores output in char buffer (later added the index of where the output was add to handle multiple chars)
+        currentOut += sprintf(output + currentOut, "\\u%04X", codePoint);
+
     }
-    return i;
+    return currentOut;
 }
 
 int my_utf8_check(char *input) {
