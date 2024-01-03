@@ -8,6 +8,7 @@ int my_utf8_encode(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_check(char *input);
 int my_utf8_strlen(char *input);
+int my_builtin_strlen(char *input);
 char* my_utf8_charat(char *input, int index);
 int my_utf8_strcmp(char *str1, char *str2);
 char* my_utf8_concat(char *str1, char *str2);
@@ -415,6 +416,41 @@ int my_utf8_strlen(char *input){
     return length;
 
 }
+
+// my own version of the built in byte based strlen as a helper
+int my_builtin_strlen(char *input){
+    size_t length = 0;
+
+    while (*input != '\0') {
+        // determine number of bytes in that character and increment length for a leading byte
+        int bytes;
+        if ((*input & 0x80) == 0) {
+            bytes = 1;
+            length += 1;
+        }
+        else if ((*input & 0xE0) == 0xC0) {
+            bytes = 2;
+            length += 2;
+        }
+        else if ((*input & 0xF0) == 0xE0) {
+            bytes = 3;
+            length += 3;
+        }
+        else if ((*input & 0xF8) == 0xF0) {
+            bytes = 4;
+            length += 4;
+        }
+
+        // then jump ahead that amount
+        input += bytes;
+        // and jump ahead for continuation bits
+        while ((*input & 0xC0) == 0x80) {
+            input++;
+        }
+    }
+    return length;
+}
+
 char *my_utf8_charat(char *input, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
      * each leading bit counts as a character that we have now seen, so we find the right index based off the number of leading bits we are seeing
@@ -531,9 +567,10 @@ char* my_utf8_concat(char *str1, char *str2){
     return result;
 }
 
-char* my_utf8_last(char *input) {
-    size_t length = strlen(input);
 
+char* my_utf8_last(char *input) {
+    // first we need the length of the input by bytes, but cannot use built in strlen so
+    size_t length = my_builtin_strlen(input);
     // we start at the end and then back up until we see the start of the continuation bits of this last byte
     char* beg_of_end = input + length - 1;
     while ((*beg_of_end & 0xC0) == 0x80) {
