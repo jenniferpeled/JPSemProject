@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-int my_utf8_encode(char *input, char *output);
 int my_utf8_encode_helper(char *input, char *output);
+int my_utf8_encode(char *input, char *output);
 int my_utf8_decode(char *input, char *output);
 int my_utf8_check(char *input);
 int my_utf8_strlen(char *input);
@@ -75,6 +75,8 @@ int main() {
 
 }
 
+// START OF TESTING FUNCTIONSS
+
 int lastchar_tests(char *input, char *expected){
     char* result = my_utf8_last(input);
 
@@ -91,7 +93,7 @@ int lastchar_tests(char *input, char *expected){
 int strconcat_tests(char *str1, char *str2, char *expected){
     char *result = my_utf8_concat(str1, str2);
 
-    if (strcmp(result, expected) == 0) {
+    if (my_utf8_strcmp(result, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -130,7 +132,7 @@ int strlen_tests(char *input, int expected){
 int charat_tests(char *input, int index, char *expected){
     char *result = my_utf8_charat(input, index);
 
-    if (strcmp(result, expected) == 0) {
+    if (my_utf8_strcmp(result, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -160,7 +162,7 @@ int decoding_tests(char *input, char *expected){
     memset(unicode, 0, sizeof(unicode));
     my_utf8_decode(input, unicode);
 
-    if (strcmp(unicode, expected) == 0) {
+    if (my_utf8_strcmp(unicode, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -174,7 +176,7 @@ int encoding_tests(char *input, char *expected) {
     char utf8[100];
     my_utf8_encode(input, utf8);
 
-    if (strcmp(utf8, expected) == 0) {
+    if (my_utf8_strcmp(utf8, expected) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -183,6 +185,8 @@ int encoding_tests(char *input, char *expected) {
 
     return 0;
 }
+
+// START OF PROJECT FUNCTIONS
 
 // helper for encode method - handles encoding of one codepoint at a time
 int my_utf8_encode_helper(char *input, char *output){
