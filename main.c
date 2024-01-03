@@ -81,7 +81,7 @@ int main() {
 int lastchar_tests(char *input, char *expected){
     char* result = my_utf8_last(input);
 
-    if (memcmp(result, expected, strlen(result)) == 0) {
+    if (memcmp(result, expected, my_builtin_strlen(result)) == 0) {
         printf("Test passed!\n");
     }
     else {
@@ -453,7 +453,7 @@ int my_builtin_strlen(char *input){
 
 char *my_utf8_charat(char *input, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
-     * each leading bit counts as a character that we have now seen, so we find the right index based off the number of leading bits we are seeing
+     * each leading bit counts as a character that we have noint my_builtin_strlen(char *input)w seen, so we find the right index based off the number of leading bits we are seeing
      */
     int curr = 0;
     while (index > 0) {
