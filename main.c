@@ -172,7 +172,7 @@ int decoding_tests(char *input, char *expected){
 
 int encoding_tests(char *input, char *expected) {
     char utf8[100];
-    my_utf8_encode_helper(input, utf8);
+    my_utf8_encode(input, utf8);
 
     if (strcmp(utf8, expected) == 0) {
         printf("Test passed!\n");
@@ -184,7 +184,8 @@ int encoding_tests(char *input, char *expected) {
     return 0;
 }
 
-int my_utf8_encode(char *input, char *output){
+// helper for encode method - handles encoding of one codepoint at a time
+int my_utf8_encode_helper(char *input, char *output){
     /* start by finding the number of bytes. based on that, we need to fill in the binary pattern with the hex binary values
      * how? like checking for valid utf, we're gonna use masks to fill in the 10xxxxxx's
      * then we'll handle the leading bits and final null terminating
@@ -239,8 +240,8 @@ int my_utf8_encode(char *input, char *output){
 
 }
 
-// helper method for encode - handling multiple characters
-int my_utf8_encode_helper(char *input, char *output) {
+// main encode method, uses the helper for each character
+int my_utf8_encode(char *input, char *output) {
     while (*input != '\0') {
         if (*input == '\\' && *(input + 1) == 'u') {
             // we're gonna handle each \u character separately
@@ -253,7 +254,7 @@ int my_utf8_encode_helper(char *input, char *output) {
             }
 
             // now lets handle each character
-            int bytes = my_utf8_encode(input, output);
+            int bytes = my_utf8_encode_helper(input, output);
             if (bytes < 0) {
                 return -1;
             }
