@@ -51,26 +51,37 @@ int main() {
 
     printf("\nChar At Tests:\n");
     charat_tests("My name is Jennie", 0, "M");
+    charat_tests("אריה", 0, "א");
     charat_tests("Hello, 😘 Jennie!", 7, "😘");
+    charat_tests("\xc2\xbf\xc3\x80", 1, "À");
+    charat_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", 2, "י");
 
     printf("\nString Length Tests:\n");
     strlen_tests("אריה", 4);
     strlen_tests("arieh", 5);
     strlen_tests("😘", 1);
     strlen_tests("\xC2\x80", 1);
+    strlen_tests("\xc2\xbf\xc3\x80", 2);
 
     printf("\nString Comparison Tests:\n");
     strcmp_tests("hello", "hello", 0);
     strcmp_tests("😘", "😘", 0);
     strcmp_tests("abc", "abcdef", -1);
+    strcmp_tests("", "", 0);
+    strcmp_tests("\xc2\xbf\xc3\x80","¿À", 0);
 
     printf("\nString Concatenation Tests:\n");
+    strconcat_tests("Hi", "Jennie", "HiJennie");
     strconcat_tests( "Hello, ", "😘", "Hello, 😘");
     strconcat_tests("€", "€", "€€");
+    strconcat_tests("\xc2\xbf", "\xc3\x80","¿À");
+    strconcat_tests("\\u05D0\\u05E8", "\\u05D9\\u05D4", "\\u05D0\\u05E8\\u05D9\\u05D4");
 
     printf("\nLast Character Tests:\n");
     lastchar_tests("Hello, 世界", "界");
-
+    lastchar_tests("", "");
+    lastchar_tests("\xc2\x80\xc3\x80", "À");
+    lastchar_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "ה");
 
     return 0;
 
@@ -453,46 +464,45 @@ int my_builtin_strlen(char *input){
 
 char *my_utf8_charat(char *input, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
-     * each leading bit counts as a character that we have noint my_builtin_strlen(char *input)w seen, so we find the right index based off the number of leading bits we are seeing
+     * each leading bit counts as a character that we have seen, so we find the right index based off the number of leading bits we are seeing
      */
-    // two quick error checks
-    int check = my_utf8_check(input);
-    if (check == -1){
-        return NULL;
-    }
-    int len = my_utf8_strlen(input);
-    if (index > len){
-        return NULL;
-    }
-
-    int curr = 0;
-    while (index > 0) {
-        // if it's a leading byte, decrement the index so we know to move along
-        if ((input[curr] <= 0x7F) || ((input[curr] & 0xE0) == 0xC0) || ((input[curr] & 0xF0) == 0xE0) || ((input[curr] & 0xF8) == 0xF0)){
-            index--;
+    int i = 0;
+    int bytes = 0;
+    // we want to keep looping until i is greater than index cuz it means we hit the right spot
+    // need to know number of bytes so we fully jump over the character, versus indexing inside
+    while (*input != '\0' && i <= index) {
+        if ((*input & 0x80) == 0) {
+            bytes = 1;
         }
-        curr++;
-    }
-    // once we fall out of the loop, index = 0 which means we found the right place so return that element
-    // however, we need to add a null terminating string or it will return the rest of the string from that element on
-    // so see how long the character is based on continuation bits (10xxxxxx)
-    int i = 1;
-    while ((input[curr+i] & 0xC0) == 0x80) {
+        else if ((*input & 0xE0) == 0xC0) {
+            bytes = 2;
+        }
+        else if ((*input & 0xF0) == 0xE0) {
+            bytes = 3;
+        }
+        else if ((*input & 0xF8) == 0xF0) {
+            bytes = 4;
+        }
+        // move to the FULLY next character
+        input += bytes;
+        // then decrement index
         i++;
     }
 
     // need to remake the char* with extra space for null terminating character
-    char *character = (char *)malloc(i + 1);
+    char *character = (char *)malloc(bytes + 1);
 
     // and then fill in with the character
-    for (int j = 0; j < i; j++) {
-        character[j] = input[curr + j];
+    for (int j = 0; j < bytes; j++) {
+        character[j] = (char)(input[j - bytes]);
     }
-    character[i] = '\0';
+    // and null terminate
+    character[bytes] = '\0';
 
     return character;
 
 }
+
 int my_utf8_strcmp(char *str1, char *str2) {
     while (*str1 != '\0' && *str2 != '\0'){
         // we need to know how many bytes the current chars are
