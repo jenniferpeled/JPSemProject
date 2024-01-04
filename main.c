@@ -455,6 +455,16 @@ char *my_utf8_charat(char *input, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
      * each leading bit counts as a character that we have noint my_builtin_strlen(char *input)w seen, so we find the right index based off the number of leading bits we are seeing
      */
+    // two quick error checks
+    int check = my_utf8_check(input);
+    if (check == -1){
+        return NULL;
+    }
+    int len = my_utf8_strlen(input);
+    if (index > len){
+        return NULL;
+    }
+
     int curr = 0;
     while (index > 0) {
         // if it's a leading byte, decrement the index so we know to move along
