@@ -33,8 +33,8 @@ int my_builtin_strlen = a method to return the length, based on bytes, of a stri
 Since we could not use built in string methods, I wrote my own to mimic the built in string length for some functions and testing. It works similarly to the strlen above, but increments the length with the number of bytes.
 
 char *my_utf8_charat = a method to return the UTF8 char at that index
-As I know from my earlier methods, we can check whether a byte is a start byte. If it is, we know it is the start of a character which may or may not be what we are looking for.
-To figure that out, I decrement the index each time we see a start byte, so that by the time the index is 0, I am at the right spot for the character the index specified.
+I start with knowing from past experience how to get an element at an index where you cannot directly index in. Within that loop, I need to know how many bytes the character is, because I want the index to be character-based, meaning the user can't index into the second byte of a character bc they probably did not mean to do that.
+So, I check how many bytes, then jump ahead that amount in the string, then increment my counter against the index. Once I exit the loop, we are at the right character.
 At that point, we just need to return the character at that index. However, I realized through testing that we need to add a null terminating character, otherwise the rest of the string will be returned as well, so I reallocated space for the character with a null terminating space at the end.
 
 int my_utf8_strcmp = a method to compare two strings
