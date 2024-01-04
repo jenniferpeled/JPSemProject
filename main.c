@@ -31,6 +31,8 @@ int main() {
     encoding_tests("\\u05D0\\u05E8\\u05D9\\u05D4", "אריה");
     encoding_tests("Hello \\u05D0\\u05E8\\u05D9\\u05D4", "Hello אריה");
     encoding_tests("\\u1F618", "😘");
+    encoding_tests("Hi", "Hi");
+    encoding_tests("\xc2\xa8", "\xc2\xa8");
 
     printf("\nDecoding Tests:\n");
     decoding_tests("\xd7\x90", "\\u05D0");
@@ -40,7 +42,8 @@ int main() {
     decoding_tests("Hello \xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "Hello \\u05D0\\u05E8\\u05D9\\u05D4");
     decoding_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94 Hello", "\\u05D0\\u05E8\\u05D9\\u05D4 Hello");
     decoding_tests("\x24", "$");
-    decoding_tests("j", "j");
+    decoding_tests("Hi", "Hi");
+    decoding_tests("\\u05D0", "\\u05D0");
 
     printf("\nValid UTF8 Tests:\n");
     valid_utf8_tests("אריה", 0);
@@ -55,10 +58,12 @@ int main() {
     charat_tests("Hello, 😘 Jennie!", 7, "😘");
     charat_tests("\xc2\xbf\xc3\x80", 1, "À");
     charat_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", 2, "י");
+    charat_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", 3, "ה");
 
     printf("\nString Length Tests:\n");
     strlen_tests("אריה", 4);
     strlen_tests("arieh", 5);
+    strlen_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", 4);
     strlen_tests("😘", 1);
     strlen_tests("\xC2\x80", 1);
     strlen_tests("\xc2\xbf\xc3\x80", 2);
@@ -69,6 +74,7 @@ int main() {
     strcmp_tests("abc", "abcdef", -1);
     strcmp_tests("", "", 0);
     strcmp_tests("\xc2\xbf\xc3\x80","¿À", 0);
+    strcmp_tests("\xB2\xA3", "jennie", NULL);
 
     printf("\nString Concatenation Tests:\n");
     strconcat_tests("Hi", "Jennie", "HiJennie");
@@ -78,9 +84,9 @@ int main() {
     strconcat_tests("\\u05D0\\u05E8", "\\u05D9\\u05D4", "\\u05D0\\u05E8\\u05D9\\u05D4");
 
     printf("\nLast Character Tests:\n");
-    lastchar_tests("Hello, 世界", "界");
+    lastchar_tests("Hello, 😘", "😘");
     lastchar_tests("", "");
-    lastchar_tests("\xc2\x80\xc3\x80", "À");
+    lastchar_tests("\xc3\x80\xc2\xa9", "©");
     lastchar_tests("\xd7\x90\xd7\xa8\xd7\x99\xd7\x94", "ה");
 
     return 0;
@@ -96,7 +102,7 @@ int lastchar_tests(char *input, char *expected){
         printf("Test passed!\n");
     }
     else {
-        printf("Test failed.");
+        printf("Test failed.\n");
     }
 
     return 0;
@@ -394,6 +400,7 @@ int my_utf8_check(char *input) {
     }
     return 0;
 }
+
 int my_utf8_strlen(char *input){
     size_t length = 0;
 
@@ -466,6 +473,10 @@ char *my_utf8_charat(char *input, int index){
     /* for this method, we have however many utf8 characters. so to know we're at one character means making sure we see a leading bit
      * each leading bit counts as a character that we have seen, so we find the right index based off the number of leading bits we are seeing
      */
+    if (index > my_utf8_strlen(input)){
+        return NULL;
+    }
+
     int i = 0;
     int bytes = 0;
     // we want to keep looping until i is greater than index cuz it means we hit the right spot
@@ -482,6 +493,9 @@ char *my_utf8_charat(char *input, int index){
         }
         else if ((*input & 0xF8) == 0xF0) {
             bytes = 4;
+        }
+        else{
+            return NULL;
         }
         // move to the FULLY next character
         input += bytes;
@@ -504,6 +518,9 @@ char *my_utf8_charat(char *input, int index){
 }
 
 int my_utf8_strcmp(char *str1, char *str2) {
+    if (my_utf8_check(str1) == -1 || my_utf8_check(str2) == -1){
+        return NULL;
+    }
     while (*str1 != '\0' && *str2 != '\0'){
         // we need to know how many bytes the current chars are
         int bytes1 = 0;
