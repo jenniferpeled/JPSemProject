@@ -483,6 +483,7 @@ char *my_utf8_charat(char *input, int index){
 
     // need to remake the char* with extra space for null terminating character
     char *character = (char *)malloc(i + 1);
+
     // and then fill in with the character
     for (int j = 0; j < i; j++) {
         character[j] = input[curr + j];
