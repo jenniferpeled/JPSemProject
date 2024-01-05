@@ -7,12 +7,11 @@ We always want to preserve the 6 bits from unicode, which we can do by ANDing wi
 For the first two bits, we need to make sure that they are 10, which we get using 1000 0000 (x80). 
 Once we've handled all of this, in a for loop based on the number of bytes, we handle the beginning, which needs the number of 1s equal to the number of bytes.
 Therefore, we make a mask of 1s (xFF) in all the places we need 1s (meaning shift it to the right spots), and then move this all the way to the start.
-At the end, we put a null terminating character.  
 Credit to ChatGPT, which I consulted in helping me with understanding how to shift the bits properly - it helped me calculate (6 * (bytes - 1))
 
 int my_utf8_encode = a method to encode full strings into UTF8
 First, I differentiate each character by its starting with \u, and find the length of the current character. 
-Then, I handle each character separately, calling the elper method above, then moving to the next character.
+Then, I handle each character separately, calling the helper method above, then moving to the next character.
 I also included handling of non unicode code points, and of course ended with a null terminating character.
 
 int my_utf8_decode = a method to decode a UTF8 character back into Unicode
@@ -38,8 +37,7 @@ So, I check how many bytes, then jump ahead that amount in the string, then incr
 At that point, we just need to return the character at that index. However, I realized through testing that we need to add a null terminating character, otherwise the rest of the string will be returned as well, so I reallocated space for the character with a null terminating space at the end.
 
 int my_utf8_strcmp = a method to compare two strings
-First, I find how many bytes the current character of each string is.Then, we compare the character of that byte length by subtracting them. If that does not result in 0, they are already not equal.
-If they are not the same number of bytes, they are also not equal. We then move to the next byte and continue this check. At the end of our while loop, if they are both empty, they were equal (and if not, not).
+First, I find how many bytes the current character of each string is. Then, we compare the characters of that byte length by subtracting them. If that does not result in 0, they are already not equal. If they are not the same number of bytes, they are also not equal. We then move to the next byte and continue this check. At the end of our while loop, if they are both empty, they were equal (and if not, not).
 
 char* my_utf8_concat = a method to concatenate two strings
 First, I find the lengths of each original string, and use that information to allocate a new string of the combined lengths plus a null char. 
